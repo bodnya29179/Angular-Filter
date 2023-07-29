@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DataManipulationService, FilterService } from '../services';
 import { ICalculatedProduct, IFilterDefinition } from '../interfaces';
 import { FormControl, FormGroup } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-filter-panel',
@@ -28,9 +29,11 @@ import { FormControl, FormGroup } from '@angular/forms';
     `,
   ]
 })
-export class FilterPanelComponent implements OnInit {
+export class FilterPanelComponent implements OnInit, OnDestroy {
   form = new FormGroup({});
   filterDefinition: IFilterDefinition<ICalculatedProduct>[];
+
+  private readonly unsubscribe$ = new Subject<void>();
 
   get hasControls(): boolean {
     return !!this.controls.length;
@@ -47,13 +50,13 @@ export class FilterPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.form.valueChanges
-      /* TODO: unsubscribe here */
+      .pipe(takeUntil(this.unsubscribe$))
       .subscribe((filter: Record<string, string[]>) => {
         this.dataManipulationService.setFilter(filter);
       });
 
     this.filterService.getFilterDefinition()
-      /* TODO: unsubscribe here */
+      .pipe(takeUntil(this.unsubscribe$))
       .subscribe((filterDefinition: IFilterDefinition<ICalculatedProduct>[]) => {
         this.filterDefinition = filterDefinition;
 
@@ -61,5 +64,10 @@ export class FilterPanelComponent implements OnInit {
           this.form.addControl(definition.id, new FormControl([]));
         });
       });
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 }

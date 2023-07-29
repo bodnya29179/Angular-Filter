@@ -1,5 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-filter-card',
@@ -20,7 +21,7 @@ import { FormControl } from '@angular/forms';
     </div>
   `,
 })
-export class FilterCardComponent implements OnInit {
+export class FilterCardComponent implements OnInit, OnDestroy {
   @Input()
   label: string;
 
@@ -38,6 +39,8 @@ export class FilterCardComponent implements OnInit {
 
   selectedOptions: string[] = [];
 
+  private readonly unsubscribe$ = new Subject<void>();
+
   ngOnInit(): void {
     /* Set the start value if passed control already has it */
     if (!this.selectedOption && this.control.value) {
@@ -52,10 +55,15 @@ export class FilterCardComponent implements OnInit {
 
     /* Change the selected values in this component if control is updated from the parent component */
     this.control.valueChanges
-      /* TODO: unsubscribe here */
+      .pipe(takeUntil(this.unsubscribe$))
       .subscribe((value: any) => {
         this.selectedOptions = value;
       });
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   onCheckboxChange(event: Event) {
