@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -20,6 +20,7 @@ import { Subject, takeUntil } from 'rxjs';
       </label>
     </div>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FilterCardComponent implements OnInit, OnDestroy {
   @Input()
@@ -41,16 +42,20 @@ export class FilterCardComponent implements OnInit, OnDestroy {
 
   private readonly unsubscribe$ = new Subject<void>();
 
+  constructor(private cd: ChangeDetectorRef) {}
+
   ngOnInit(): void {
     /* Set the start value if passed control already has it */
     if (!this.selectedOption && this.control.value) {
       this.selectedOptions = this.control.value;
+      this.cd.detectChanges();
     }
 
     /* Set the selected option if it was passed */
     if (this.selectedOption) {
       this.selectedOptions = [this.selectedOption.id];
       this.control.setValue(this.selectedOption);
+      this.cd.detectChanges();
     }
 
     /* Change the selected values in this component if control is updated from the parent component */
@@ -58,6 +63,7 @@ export class FilterCardComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((value: any) => {
         this.selectedOptions = value;
+        this.cd.detectChanges();
       });
   }
 

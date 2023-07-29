@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { DataManipulationService, FilterService } from '../services';
 import { ICalculatedProduct, IFilterDefinition } from '../interfaces';
 import { FormControl, FormGroup } from '@angular/forms';
@@ -27,7 +27,8 @@ import { Subject, takeUntil } from 'rxjs';
         gap: 20px;
       }
     `,
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FilterPanelComponent implements OnInit, OnDestroy {
   form = new FormGroup({});
@@ -46,6 +47,7 @@ export class FilterPanelComponent implements OnInit, OnDestroy {
   constructor(
     private dataManipulationService: DataManipulationService,
     private filterService: FilterService<ICalculatedProduct>,
+    private cd: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -63,6 +65,8 @@ export class FilterPanelComponent implements OnInit, OnDestroy {
         this.filterDefinition.forEach((definition: IFilterDefinition<ICalculatedProduct>) => {
           this.form.addControl(definition.id, new FormControl([]));
         });
+
+        this.cd.detectChanges();
       });
   }
 

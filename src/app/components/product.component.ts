@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { ICalculatedProduct } from '../interfaces';
 
 @Component({
@@ -18,7 +18,8 @@ import { ICalculatedProduct } from '../interfaces';
         background-color: #dbdbdb;
       }
     `
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductComponent {
   @Input()

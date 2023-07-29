@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, filter, Observable, combineLatest, map, tap } from 'rxjs';
+import { BehaviorSubject, filter, Observable, combineLatest, map } from 'rxjs';
 import { FilterService } from './filter.service';
 import { IFilterDefinition } from '../interfaces';
 
@@ -17,9 +17,9 @@ export class DataManipulationService<T = any> {
 
   getData(): Observable<T[]> {
     return combineLatest([
-      this.data$.pipe(filter(Boolean), tap(console.log)),
-      this.filter$.pipe(filter(Boolean), tap(console.log)),
-      this.filterService.getFilterDefinition().pipe(tap(console.log)),
+      this.data$.pipe(filter(Boolean)),
+      this.filter$.pipe(filter(Boolean)),
+      this.filterService.getFilterDefinition(),
     ]).pipe(
       map(([data, filterValue, filterDefinitions]: [T[], object, IFilterDefinition<T>[]]) => {
         let result = data;
