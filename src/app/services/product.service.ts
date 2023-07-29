@@ -25,7 +25,7 @@ export class ProductService {
         name: 'fake-product-name3',
         brandId: 'fake-brand-id2',
         categoryId: 'fake-category-id2',
-        price: 200,
+        price: 500,
       },
     ]);
   }

@@ -2,7 +2,15 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 import { FilterPanelComponent } from './components';
-import { BrandService, CategoryService, DataManipulationService, ProductService } from './services';
+import {
+  BrandFacadeService,
+  BrandService,
+  CategoryFacadeService,
+  CategoryService,
+  DataManipulationService,
+  ProductFacadeService,
+  ProductService
+} from './services';
 
 @NgModule({
   imports: [BrowserModule],
@@ -15,6 +23,9 @@ import { BrandService, CategoryService, DataManipulationService, ProductService 
     ProductService,
     BrandService,
     CategoryService,
+    ProductFacadeService,
+    BrandFacadeService,
+    CategoryFacadeService,
   ],
   bootstrap: [AppComponent],
 })
