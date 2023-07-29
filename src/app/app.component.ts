@@ -9,12 +9,7 @@ import { ICalculatedProduct } from './interfaces';
     <app-filter-panel></app-filter-panel>
 
     <div *ngIf="(products$ | async) as products" class="products-container">
-      <div *ngFor="let product of products" class="product">
-        <span>{{ product.name }}</span>
-        <span>{{ product.brandName }}</span>
-        <span>{{ product.categoryName }}</span>
-        <span>$ {{ product.price }}</span>
-      </div>
+      <app-product *ngFor="let product of products" [product]="product"></app-product>
     </div>
   `,
   styles: [
@@ -23,13 +18,7 @@ import { ICalculatedProduct } from './interfaces';
         display: flex;
         flex-wrap: wrap;
         gap: 20px;
-      }
-
-      .product {
-        width: 200px;
-        display: flex;
-        flex-direction: column;
-        background-color: #dbdbdb;
+        margin-top: 20px;
       }
     `,
   ]
@@ -44,8 +33,10 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.productFacade.initializeData();
+    this.productFacade.initializeFilter();
 
     this.productFacade.getProducts()
+      /* TODO: unsubscribe here */
       .subscribe((products: ICalculatedProduct[]) => {
         this.dataManipulationService.setData(products);
       });
