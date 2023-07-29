@@ -1,5 +1,4 @@
-export interface IFilterOption<T> {
+export interface IFilterOption {
   id: string;
-  idSelector: (item: T) => string;
-  // displayValueSelector: (item: T) => string,
+  value: string;
 }

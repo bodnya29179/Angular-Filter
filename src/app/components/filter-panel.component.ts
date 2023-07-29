@@ -1,32 +1,20 @@
 import { Component, OnInit } from '@angular/core';
-import { BrandFacadeService, CategoryFacadeService, DataManipulationService } from '../services';
-import { map, Observable } from 'rxjs';
-import { IBrand, ICategory, IFilter } from '../interfaces';
+import { DataManipulationService, FilterService } from '../services';
+import { ICalculatedProduct, IFilterDefinition } from '../interfaces';
 import { FormControl, FormGroup } from '@angular/forms';
-
-const SELECT_ALL = { id: 'all', name: 'All' };
 
 @Component({
   selector: 'app-filter-panel',
   template: `
-    <form class="filter" [formGroup]="form">
+    <form *ngIf="hasControls" class="filter" [formGroup]="form">
       <app-filter-card
-        *ngIf="(brandOptions$ | async) as brandOptions"
-        [label]="'Brands'"
-        [control]="$any(form.get('brands'))"
-        [options]="brandOptions"
-        [selectedOption]="brandOptions[0]"
-        [idSelector]="brandIdSelector"
-        [displayValueSelector]="brandNameSelector">
-      </app-filter-card>
-
-      <app-filter-card
-        [label]="'Categories'"
-        [control]="$any(form.get('categories'))"
-        [options]="categoryOptions$ | async"
-        [idSelector]="categoryIdSelector"
-        [displayValueSelector]="categoryNameSelector"
-        [multiselect]="true">
+        *ngFor="let definition of filterDefinition; let index = index"
+        [label]="definition.label"
+        [control]="controls[index]"
+        [options]="definition.options"
+        [selectedOption]="definition.selectedOption"
+        [multiselect]="definition.multiselect"
+      >
       </app-filter-card>
     </form>
   `,
@@ -41,57 +29,37 @@ const SELECT_ALL = { id: 'all', name: 'All' };
   ]
 })
 export class FilterPanelComponent implements OnInit {
-  brandOptions$: Observable<IBrand[]>;
-  categoryOptions$: Observable<ICategory[]>;
+  form = new FormGroup({});
+  filterDefinition: IFilterDefinition<ICalculatedProduct>[];
 
-  form: FormGroup;
+  get hasControls(): boolean {
+    return !!this.controls.length;
+  }
+
+  get controls(): FormControl[] {
+    return Object.values(this.form.controls);
+  }
 
   constructor(
-    private brandFacade: BrandFacadeService,
-    private categoryFacade: CategoryFacadeService,
     private dataManipulationService: DataManipulationService,
+    private filterService: FilterService<ICalculatedProduct>,
   ) {}
 
   ngOnInit(): void {
-    this.initializeValues();
-    this.initializeListeners();
-  }
-
-  brandIdSelector(brand: IBrand): string {
-    return brand.id;
-  }
-
-  brandNameSelector(brand: IBrand): string {
-    return brand.name;
-  }
-
-  categoryIdSelector(category: ICategory): string {
-    return category.id;
-  }
-
-  categoryNameSelector(category: ICategory): string {
-    return category.name;
-  }
-
-  private initializeValues(): void {
-    this.brandOptions$ = this.brandFacade.getBrands()
-      .pipe(
-        map((brandOptions: IBrand[]) => [SELECT_ALL, ...brandOptions]),
-      );
-
-    this.categoryOptions$ = this.categoryFacade.getCategories();
-
-    this.form = new FormGroup({
-      brands: new FormControl([]),
-      categories: new FormControl([]),
-    });
-  }
-
-  private initializeListeners(): void {
     this.form.valueChanges
       /* TODO: unsubscribe here */
-      .subscribe((filter: IFilter) => {
+      .subscribe((filter: Record<string, string[]>) => {
         this.dataManipulationService.setFilter(filter);
+      });
+
+    this.filterService.getFilterDefinition()
+      /* TODO: unsubscribe here */
+      .subscribe((filterDefinition: IFilterDefinition<ICalculatedProduct>[]) => {
+        this.filterDefinition = filterDefinition;
+
+        this.filterDefinition.forEach((definition: IFilterDefinition<ICalculatedProduct>) => {
+          this.form.addControl(definition.id, new FormControl([]));
+        });
       });
   }
 }

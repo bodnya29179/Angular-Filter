@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, combineLatest, filter, firstValueFrom, map, Observable } from 'rxjs';
-import { IBrand, ICalculatedProduct, ICategory, IProduct } from '../interfaces';
+import { IBrand, ICalculatedProduct, ICategory, IFilterOption, IProduct } from '../interfaces';
 import { ProductService } from './product.service';
 import { BrandFacadeService } from './brand-facade.service';
 import { CategoryFacadeService } from './category-facade.service';
@@ -28,16 +28,39 @@ export class ProductFacadeService {
     this.categoryFacade.loadCategories();
   }
 
-  initializeFilter(): void {
+  async initializeFilter(): Promise<void> {
+    const brands = await firstValueFrom(this.brandFacade.getBrands());
+    const categories = await firstValueFrom(this.categoryFacade.getCategories());
+
     this.filterService.initializeFilter([
       {
         id: ProductFilterOption.brands,
-        idSelector: (product: ICalculatedProduct) => product.brandId,
+        propertySelector: (product: ICalculatedProduct) => product.brandId,
+        label: 'Brands',
+        options: [
+          {
+            id: 'all',
+            value: 'All brands',
+          },
+          ...brands.map((brand: IBrand) => ({
+            id: brand.id,
+            value: brand.name,
+          })),
+        ],
+        get selectedOption(): IFilterOption {
+          return this.options[0];
+        },
       },
       {
         id: ProductFilterOption.categories,
-        idSelector: (product: ICalculatedProduct) => product.categoryId,
-      }
+        propertySelector: (product: ICalculatedProduct) => product.categoryId,
+        label: 'Categories',
+        options: categories.map((category: ICategory) => ({
+          id: category.id,
+          value: category.name,
+        })),
+        multiselect: true,
+      },
     ]);
   }
 

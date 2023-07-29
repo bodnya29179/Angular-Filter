@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, filter, Observable, combineLatest, map, tap } from 'rxjs';
 import { FilterService } from './filter.service';
-import { IFilterOption } from '../interfaces';
+import { IFilterDefinition } from '../interfaces';
 
 @Injectable()
 export class DataManipulationService<T = any> {
   private readonly data$ = new BehaviorSubject<T[]>(undefined);
 
-  private readonly filterPanel$ = new BehaviorSubject<object>({});
+  private readonly filter$ = new BehaviorSubject<Record<string, string[]>>({});
 
   constructor(private filterService: FilterService) {}
 
@@ -18,27 +18,33 @@ export class DataManipulationService<T = any> {
   getData(): Observable<T[]> {
     return combineLatest([
       this.data$.pipe(filter(Boolean), tap(console.log)),
-      this.filterPanel$.pipe(filter(Boolean), tap(console.log)),
-      this.filterService.getFilterOptions().pipe(tap(console.log)),
+      this.filter$.pipe(filter(Boolean), tap(console.log)),
+      this.filterService.getFilterDefinition().pipe(tap(console.log)),
     ]).pipe(
-      map(([data, filterPanel, selectors]: [T[], object, IFilterOption<any>[]]) => {
+      map(([data, filterValue, filterDefinitions]: [T[], object, IFilterDefinition<T>[]]) => {
         let result = data;
+        const filterKeys = Object.keys(filterValue);
 
-        if (!Object.keys(filterPanel).length) {
+        /* If filter is not selected, return initial data */
+        if (!filterKeys.length) {
           return result;
         }
 
-        Object.keys(filterPanel)
-          .filter((filterKey: string) => filterPanel[filterKey]?.length)
+        filterKeys
+          .filter((filterKey: string) => filterValue[filterKey]?.length)
           .forEach((filterKey: string) => {
-            const selector = selectors.find(({ id }) => id === filterKey);
+            const definition = filterDefinitions.find(({ id }) => id === filterKey);
 
-            if (filterPanel[filterKey].length === 1 && filterPanel[filterKey][0] === 'all') {
+            /* If the 'all' option is selected */
+            if (filterValue[filterKey].length === 1 && filterValue[filterKey][0] === 'all') {
               return;
             }
 
+            /* Filter data by selected fields */
             result = result.filter((data: T) => {
-              return (filterPanel[filterKey] as string[]).includes(selector.idSelector(data));
+              const dataField = definition.propertySelector(data);
+
+              return filterValue[filterKey].includes(dataField);
             });
           });
 
@@ -47,7 +53,7 @@ export class DataManipulationService<T = any> {
     ) as Observable<T[]>;
   }
 
-  setFilter(filter: object): void {
-    this.filterPanel$.next(filter);
+  setFilter(filter: Record<string, string[]>): void {
+    this.filter$.next(filter);
   }
 }
